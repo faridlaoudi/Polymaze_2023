@@ -1,0 +1,213 @@
+#include <Wire.h>
+#include <Adafruit_TCS34725.h>
+
+#define IN1 4
+#define IN2 5
+#define ENA 3
+#define IN3 6
+#define IN4 7
+#define ENB 2
+// THE SIDE IRs
+#define IR_LEFT 26
+#define IR_RIGHT 28
+// THE FRONT IRs
+#define LEFT_IR_PIN 24
+#define RIGHT_IR_PIN 22
+#define MIDDLE_IR_PIN 12
+
+#define red 10
+#define green 9
+#define blue 8
+
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_24MS, TCS34725_GAIN_4X);
+
+int leftSpeed = 66;
+int rightSpeed = 70;
+int fixSpeed = 55;
+
+unsigned long previousTime = 0;
+int currentColor = 0;
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(ENA, OUTPUT);  // right wheel
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+
+  pinMode(ENB, OUTPUT);  // left wheel
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  pinMode(LEFT_IR_PIN, INPUT);
+  pinMode(RIGHT_IR_PIN, INPUT);
+  pinMode(MIDDLE_IR_PIN, INPUT);
+  pinMode(IR_LEFT, INPUT);
+  pinMode(IR_RIGHT, INPUT);
+
+  pinMode(red,OUTPUT);
+   pinMode(green,OUTPUT);
+    pinMode(blue,OUTPUT);
+
+ digitalWrite(red, LOW);
+  digitalWrite(green, LOW);
+   digitalWrite(blue, LOW);
+   
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  analogWrite(ENA, 65);
+  analogWrite(ENB, 65);
+
+  
+}
+
+void loop() {
+  int leftIR = digitalRead(LEFT_IR_PIN);
+  int rightIR = digitalRead(RIGHT_IR_PIN);
+  int middleIR = digitalRead(MIDDLE_IR_PIN);
+  int left =  digitalRead(IR_LEFT);
+  int right =  digitalRead(IR_RIGHT);
+
+    
+
+
+  if (middleIR == HIGH) {
+    forward();
+  } if (rightIR == HIGH) {
+    while (digitalRead(MIDDLE_IR_PIN) == LOW) {
+      fixToRight();
+    }
+    forward();
+  }if (leftIR == HIGH) {
+    while (digitalRead(MIDDLE_IR_PIN) == LOW) {
+      fixToLeft();
+    }
+    forward();
+  }
+
+ if(digitalRead(IR_LEFT)==HIGH && rightIR==LOW && leftIR==LOW){
+ 
+  turnLeft();
+delay(300);
+
+   while (digitalRead(MIDDLE_IR_PIN) == LOW) {
+  turnLeft();
+  }
+  forward();
+ }
+ if(digitalRead(IR_RIGHT)==HIGH && rightIR==LOW && leftIR==LOW){
+if(digitalRead(MIDDLE_IR_PIN) == HIGH){
+  forward();
+ 
+   
+}
+else {
+  while (digitalRead(MIDDLE_IR_PIN) == LOW) {
+  turnRight();
+  }
+  forward();
+}
+  
+
+ }
+if (digitalRead(IR_RIGHT) == HIGH && digitalRead(IR_LEFT) == HIGH && rightIR == LOW && leftIR == LOW) {
+  turnLeft();
+  delay(300);
+
+  // Check if there is a left path in the intersection
+  while (digitalRead(MIDDLE_IR_PIN) == LOW && digitalRead(IR_LEFT) == LOW) {
+    turnLeft();
+  }
+  
+  if (digitalRead(IR_LEFT) == HIGH) {
+    forward();
+  }
+}
+
+
+  
+if (digitalRead(IR_RIGHT) == LOW && digitalRead(IR_LEFT) == LOW && digitalRead(RIGHT_IR_PIN) == LOW && digitalRead(LEFT_IR_PIN) == LOW && middleIR == LOW) {
+  stopMoving();
+  
+  // Check if the middle IR sensor detects the black line
+  if (digitalRead(MIDDLE_IR_PIN) == HIGH) {
+    forward();
+  } else {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, HIGH);
+    analogWrite(ENA, 65);
+    analogWrite(ENB, 65);
+  }
+} 
+
+ 
+  
+}
+
+void forward() {
+ 
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
+ 
+
+  analogWrite(ENA, rightSpeed);
+  analogWrite(ENB, leftSpeed);
+}
+
+void stopMoving() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+}
+
+void fixToRight() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+  analogWrite(ENA, fixSpeed);
+  analogWrite(ENB, fixSpeed);
+}
+
+void fixToLeft() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+  analogWrite(ENA, fixSpeed);
+  analogWrite(ENB, fixSpeed);
+}
+
+void turnRight(){
+    digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+   analogWrite(ENA, rightSpeed);
+  analogWrite(ENB, leftSpeed);
+}
+
+void turnLeft(){
+    digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+   analogWrite(ENA, rightSpeed);
+  analogWrite(ENB, leftSpeed);
+}
+
+void rotate180(){
+    digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+   analogWrite(ENA, rightSpeed);
+  analogWrite(ENB, leftSpeed);
+}
